@@ -1,0 +1,30 @@
+Acest proiect implementează un sistem de backup incremental pentru fișiere și directoare într-un sistem Linux, folosind scripturi Bash. Backup-ul poate fi complet sau incremental, iar arhivele pot fi criptate cu OpenSSL. Proiectul include și un sistem de restaurare a backupurilor salvate.
+
+Funcționalități
+
+  -Backup complet sau incremental
+  -Salvare metadate: sumă de control SHA256, permisiuni, owner, timestamp-uri,   ACL-uri
+  -Arhivare în format .tar.gz
+  -Opțional: criptare AES cu openssl
+  -Restaurare completă cu menținerea structurii și metadatelor
+
+Detectarea modificărilor
+
+Un fișier este considerat modificat dacă:
+
+-are conținutul schimbat (prin SHA256)
+-i s-au schimbat permisiunile, ownerul, groupul
+-i s-au modificat ACL-urile
+-a fost accesat/modificat (timpul mtime, atime)
+
+backup-project/
+├── backup.sh            # Scriptul principal
+├── generate_meta.sh     # Generează metadatele (hashuri, permisiuni etc.)
+├── compare_meta.sh      # Compară metadatele cu un backup anterior
+├── create_archive.sh    # Creează arhiva finală (tar.gz)
+├── encrypt.sh           # Criptează arhiva cu OpenSSL (opțional)
+├── restore.sh           # Script de restaurare a backupului
+├── config.conf          # Fișier de configurare opțional
+├── .metadata/           # Director în care se salvează metadatele
+└── README.md            # Documentația proiectului (acest fișier)
+
