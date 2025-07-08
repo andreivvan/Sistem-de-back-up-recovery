@@ -2,20 +2,22 @@ Acest proiect implementează un sistem de backup incremental pentru fișiere și
 
 Funcționalități
 
-  -Backup complet sau incremental
-  -Salvare metadate: sumă de control SHA256, permisiuni, owner, timestamp-uri,   ACL-uri
-  -Arhivare în format .tar.gz
-  -Opțional: criptare AES cu openssl
-  -Restaurare completă cu menținerea structurii și metadatelor
+  - Backup complet sau incremental
+  - Arhivare automată în format `.tar.gz`
+  - Salvare metadate într-un format CSV: SHA256, permisiuni, owner, grup, timestamp-uri, ACL-uri
+  - Comparare inteligentă a metadatelor pentru a detecta modificări reale
+  - Criptare opțională a backupului cu `openssl` (AES)
+  - Restaurare completă cu menținerea structurii și metadatelor
+  - Configurabil prin fișier `config.conf` sau parametri CLI
 
 Detectarea modificărilor
 
 Un fișier este considerat modificat dacă:
 
--are conținutul schimbat (prin SHA256)
--i s-au schimbat permisiunile, ownerul, groupul
--i s-au modificat ACL-urile
--a fost accesat/modificat (timpul mtime, atime)
+ - are conținutul schimbat (prin SHA256)
+ - i s-au schimbat permisiunile, ownerul, groupul
+ - i s-au modificat ACL-urile
+ - a fost accesat/modificat (timpul mtime, atime)
 
 backup-project/
 ├── backup.sh            # Scriptul principal
@@ -27,4 +29,11 @@ backup-project/
 ├── config.conf          # Fișier de configurare opțional
 ├── .metadata/           # Director în care se salvează metadatele
 └── README.md            # Documentația proiectului (acest fișier)
+
+Posibile îmbunătățiri
+  
+  - integrare cu cron pentru backup automat
+  - suport pentru backup diferențial pe mai multe niveluri (snapshots)
+  - compresie mai avansată (lzma, zstd)
+  - interfață web simplă pentru monitorizare
 
