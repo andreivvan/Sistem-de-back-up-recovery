@@ -1,39 +1,86 @@
+
+# Proiect: Sistem de Backup Incremental in Bash
+
 Acest proiect implementează un sistem de backup incremental pentru fișiere și directoare într-un sistem Linux, folosind scripturi Bash. Backup-ul poate fi complet sau incremental, iar arhivele pot fi criptate cu OpenSSL. Proiectul include și un sistem de restaurare a backupurilor salvate.
 
-Funcționalități
+## Funcționalități implementate
 
-  - Backup complet sau incremental
-  - Arhivare automată în format `.tar.gz`
-  - Salvare metadate într-un format CSV: SHA256, permisiuni, owner, grup, timestamp-uri, ACL-uri
-  - Comparare inteligentă a metadatelor pentru a detecta modificări reale
-  - Criptare opțională a backupului cu `openssl` (AES)
-  - Restaurare completă cu menținerea structurii și metadatelor
-  - Configurabil prin fișier `config.conf` sau parametri CLI
+- Backup complet (script: `full_backup.sh`)
+- Backup incremental (script: `incremental_backup.sh`)
+- Arhivare automata in format `.tar.gz`
+- Salvare metadate în `.metadata/`, cu extensia `.meta`, pentru fiecare backup
+- Comparare inteligentă a fișierelor față de metadatele anterioare
+- Structura relativă a fișierelor salvată (fără a include calea completă ca `/home/username/...`)
+- Restaurare completă (script: `restore_backup.sh`)
+- Criptare opțională a backupului cu `openssl`
+- Suport pentru fișier de configurare text (cu directoare de backup)
 
-Detectarea modificărilor
-
-Un fișier este considerat modificat dacă:
-
- - are conținutul schimbat (prin SHA256)
- - i s-au schimbat permisiunile, ownerul, groupul
- - i s-au modificat ACL-urile
- - a fost accesat/modificat (timpul mtime, atime)
+## Structura proiectului
 
 backup-project/
-├── backup.sh            # Scriptul principal
-├── generate_meta.sh     # Generează metadatele (hashuri, permisiuni etc.)
-├── compare_meta.sh      # Compară metadatele cu un backup anterior
-├── create_archive.sh    # Creează arhiva finală (tar.gz)
-├── encrypt.sh           # Criptează arhiva cu OpenSSL (opțional)
-├── restore.sh           # Script de restaurare a backupului
-├── config.conf          # Fișier de configurare opțional
-├── .metadata/           # Director în care se salvează metadatele
-└── README.md            # Documentația proiectului (acest fișier)
+├── full_backup.sh          # Script pentru backup complet
+├── generate_meta.sh        # Generează metadatele pentru directoare
+├── incremental_backup.sh   # Backup incremental (modificări și fișiere noi)
+├── restore_backup.sh       # Restaurează backup complet + incremental
+├── .metadata/              # Director ce conține fișiere .meta cu informații despre backupuri
+└── README.md               # Documentațiea proiectului (acest fișier)
 
-Posibile îmbunătățiri
-  
-  - integrare cu cron pentru backup automat
-  - suport pentru backup diferențial pe mai multe niveluri (snapshots)
-  - compresie mai avansată (lzma, zstd)
-  - interfață web simplă pentru monitorizare
+## Salvarea metadatelor
 
+Pentru fiecare backup complet, se creează un fișier `.meta` corespunzător arhivei, salvat in `.metadata/`. Fiecare linie conține următoarele informații pentru fiecare fișier:
+
+cale_absolută|SHA256|permisiuni|owner:grup|ACL|atime|mtime
+
+Exemplu:
+
+/home/andrei/Documents/test.txt|3a4d...|644|1000:1000|a1b2c3...|1720455529|1720455528
+
+## Detectarea modificărilor
+
+Un fișier este considerat modificat dacă **cel puțin una** din următoarele condiții este împreplinită:
+
+- are conținutul schimbat (verificat prin SHA256)
+- i s-au schimbat permisiunile, ownerul sau grupul
+- i s-au modificat ACL-urile
+- a fost modificat `mtime`
+
+**Notă**: `atime` poate fi ignorat pe sistemele cu `relatime` activ.
+
+## Utilizare
+
+### Backup complet:
+
+./full_backup.sh [-f config.txt] [director1 director2 ...]
+
+- Creează o arhivă completă
+- Salvează metadate asociate în `.metadata/`
+
+### Backup incremental:
+
+./incremental_backup.sh arhiva_completa.tar.gz
+
+- Compară fișierele de pe disc cu cele din arhiva completă
+- Creează o arhivă nouă doar cu fișierele noi sau modificate
+
+### Restaurare:
+
+./restore_backup.sh arhiva_completa.tar.gz [arhiva_incrementala.tar.gz]
+
+- Extrage arhiva completă
+- (Opțional) aplică arhiva incrementală peste ea
+
+### Criptare manuală:
+
+openssl enc -aes-256-cbc -salt -in arhiva.tar.gz -out arhiva.tar.gz.enc
+
+### Decriptare:
+
+openssl enc -d -aes-256-cbc -in arhiva.tar.gz.enc -out arhiva.tar.gz
+
+## Posibile îmbunătățiri viitoare
+
+- Integrare cu `cron` pentru backup programat
+- Suport pentru backup diferențial (chain incremental)
+- Interfață web simplă pentru vizualizarea backupurilor
+- Compresie alternativă (ex: `zstd` sau `xz`)
+- Salvare pe drive extern sau server remote (cu `rsync`, `scp`)
